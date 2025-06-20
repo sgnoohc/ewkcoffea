@@ -105,10 +105,45 @@ GRP_DICT_FULL = {
 
 
 CAT_LST = [
+    # "Presel",
+    "HFJ",
+    # "VFJ",
+    # "HFJTag",
+    # "HFJmjj115",
+    # "VFJTag",
+    # "VFJn0j",
+    # "VFJn1j",
+    # "VFJn1b",
+    # "VFJ2pj",
+    # "VFJ01b",
+    # "VFJ01bMjj",
+    # "VFJ2pb",
+    # "VFJ2pbMjj",
+    # "VFJ2pbVqq",
+
     #"all_events",
     #"filters",
     #"exactly1lep",
-    "exactly1lep_exactly1fj",
+    # "Presel",
+    # "HFJ",
+    # "VFJ",
+    # "HFJTag",
+    # "HFJmjj115",
+    # "VFJ2pbvqq75",
+    # "VFJ01bmjj150",
+    # "VFJTag",
+    # "HFJPNT",
+    # "VFJ01j",
+    # "VFJn1j",
+    # "VFJmjj150",
+    # "VFJ2pj",
+    # "VFJ2pbmjj150",
+    # "VFJ01bmjj150",
+    # "exactly1lep_exactly1fj",
+    # "exactly1lep_exactly1fj_VbsMjjLt150_HbbGt0p5",
+    # "exactly1lep_exactly1fj_VbsMjjLt150_HbbLt0p5",
+    # "exactly1lep_exactly1fj_VbsMjjGt150_HbbGt0p5",
+    # "exactly1lep_exactly1fj_VbsMjjGt150_HbbLt0p5",
     #"exactly1lep_exactly1fj_STmet600",
     #"exactly1lep_exactly1fj_STmet1000",
     #"exactly1lep_exactly1fj_STmet1000_msd170",
@@ -164,6 +199,12 @@ def get_yields_per_cat(histo_dict,var_name):
         out_dict[cat]["signal"] = [yld_sig,(var_sig)**0.5]
         out_dict[cat]["background"] = [yld_bkg,(var_bkg)**0.5]
         out_dict[cat]["metric"] = [metric,None] # Don't bother propagating error
+
+        for grp in grouping_dict:
+            histo_bkg_grp = plt_tools.group(histo_base,"process","process",{grp:grouping_dict[grp]})
+            yld_bkg_grp = sum(sum(histo_bkg_grp.values(flow=True)))
+            var_bkg_grp = sum(sum(histo_bkg_grp.variances(flow=True)))
+            out_dict[cat][grp] = [yld_bkg_grp,(var_bkg_grp)**0.5]
 
     return out_dict
 
@@ -251,8 +292,8 @@ def make_vvh_fig(histo_mc,histo_mc_sig,histo_mc_bkg,title="test",axisrangex=None
     right_s_at_max = yld_sig_arr_cum_ud[max_metric_from_right_idx]
     left_b_at_max  = yld_bkg_arr_cum[max_metric_from_left_idx]
     right_b_at_max = yld_bkg_arr_cum_ud[max_metric_from_right_idx]
-    plt.text(0.15,0.35, f"Max from left:  {np.round(left_max_y,3)} (at x={np.round(left_max_x)}, sig: {np.round(left_s_at_max,2)}, bkg: {np.round(left_b_at_max,1)})", fontsize=9, transform=fig.transFigure)
-    plt.text(0.15,0.33, f"Max from right: {np.round(right_max_y,3)} (at x={np.round(right_max_x)} , sig: {np.round(right_s_at_max,2)}, bkg: {np.round(right_b_at_max,1)})", fontsize=9, transform=fig.transFigure)
+    plt.text(0.15,0.35, f"Max from left:  {np.round(left_max_y,3)} (at x={np.round(left_max_x,2)}, sig: {np.round(left_s_at_max,2)}, bkg: {np.round(left_b_at_max,1)})", fontsize=9, transform=fig.transFigure)
+    plt.text(0.15,0.33, f"Max from right: {np.round(right_max_y,3)} (at x={np.round(right_max_x,2)} , sig: {np.round(right_s_at_max,2)}, bkg: {np.round(right_b_at_max,1)})", fontsize=9, transform=fig.transFigure)
 
 
     ## Draw on the fraction of signal retained ##
@@ -371,23 +412,24 @@ def print_yields(histo_dict,roundat=None,print_counts=False,dump_to_json=True,qu
     yld_dict    = get_yields_per_cat(histo_dict,"njets")
     counts_dict = get_yields_per_cat(histo_dict,"njets_counts")
 
+    grouping_dict = append_years(GRP_DICT_FULL,["UL16APV","UL16","UL17","UL18"])
+
+    grp_lst = ["background"]
+    grp_lst += list(grouping_dict.keys())
+
     # Print to screen
     if not quiet:
         for cat in yld_dict:
-            yld_sig, err_sig = yld_dict[cat]["signal"]
-            yld_bkg, err_bkg = yld_dict[cat]["background"]
-            perr_sig = 100*(err_sig/yld_sig)
-            perr_bkg = 100*(err_bkg/yld_bkg)
+            print(f"\nCut: {cat}")
+            for grp in grp_lst:
+                yld, err = yld_dict[cat][grp]
+                perr = 100*(err/yld) if yld != 0 else 0
+                if roundat is not None:
+                    print(f"{grp}: {np.round(yld,roundat)} +- {np.round(err,roundat)} {np.round(perr,2)}%")
+                else:
+                    print(f"{grp}: {yld} +- {err} {np.round(perr,2)}%")
             metric, _ = yld_dict[cat]["metric"]
-            print(f"\n{cat}")
-            if roundat is not None:
-                print(f"{np.round(yld_sig,roundat)} +- {np.round(perr_sig,2)}%")
-                print(f"{np.round(yld_bkg,roundat)} +- {np.round(perr_bkg,2)}%")
-            else:
-                print(f"{yld_sig} +- {np.round(perr_sig,2)}%")
-                print(f"{yld_bkg} +- {np.round(perr_bkg,2)}%")
             print(f"  -> Metric: {np.round(metric,3)}")
-            print(f"  -> For copy pasting: python dump_toy_card.py {yld_sig} {yld_bkg}")
 
     # Dump to json
     if dump_to_json:
@@ -422,7 +464,7 @@ def make_plots(histo_dict):
             histo = copy.deepcopy(histo_dict[var][{"systematic":"nominal", "category":cat}])
 
             # Clean up a bit (rebin, regroup, and handle overflow)
-            if var not in ["njets","nleps","nbtagsl","nbtagsm","njets_counts","nleps_counts","nfatjets","njets_forward","njets_tot"]:
+            if var not in ["njets","nleps","nbtagsl","nbtagsm","njets_counts","nleps_counts","nfatjets","njets_forward","njets_tot","n_cenjets"]:
                 histo = plt_tools.rebin(histo,6)
             histo = plt_tools.group(histo,"process","process_grp",grouping_dict)
             histo = plt_tools.merge_overflow(histo)
