@@ -779,7 +779,8 @@ class AnalysisProcessor(processor.ProcessorABC):
             mask_Presel = veto_map_mask & filter_mask & (nleps==1) & (nfatjets==1) & (scalarptsum_lepmet > 775)
 
             mask_HFJ = mask_Presel & (fj0.particleNet_mass >  100.) & (fj0.particleNet_mass <= 150.)
-            mask_HFJTag = mask_HFJ & (fj0.particleNet_HbbvsQCD > 0.98) & (fj0.particleNet_TvsQCD < 0.5) & (fj0.particleNet_WvsQCD < 0.5)
+            mask_HFJTag = mask_HFJ & (fj0.particleNet_HbbvsQCD > 0.98) & (fj0.particleNet_TvsQCD < 0.8) & (njets_tot >= 2)
+            # & (fj0.particleNet_WvsQCD < 0.5)
             mask_HFJmjj115 = mask_HFJTag & (mass_j0centj1cent < 115)
 
             mask_VFJ = mask_Presel & (fj0.particleNet_mass <= 100.) & (fj0.particleNet_mass > 65)

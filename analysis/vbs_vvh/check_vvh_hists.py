@@ -106,9 +106,9 @@ GRP_DICT_FULL = {
 
 CAT_LST = [
     # "Presel",
-    "HFJ",
+    # "HFJ",
     # "VFJ",
-    # "HFJTag",
+    "HFJTag",
     # "HFJmjj115",
     # "VFJTag",
     # "VFJn0j",
